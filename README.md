@@ -3,8 +3,8 @@
 Simulates right button click on X11 touch screens with long touch gestures.
 
 Initially created for my Panasonic Toughbook CF-19, theoretically can work with
-any touch screen. Useful especially for non-Wacom screens which does not
-provide gestures on Linux out-of-the-box.
+any touch screen. Useful especially for non-Wacom screens which do not provide
+gestures on Linux out-of-the-box.
 
 ## How to build
 
