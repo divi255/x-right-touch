@@ -30,6 +30,7 @@ struct State {
 
 static STATE: Lazy<Mutex<State>> = Lazy::new(<_>::default);
 static WAIT: atomic::AtomicU16 = atomic::AtomicU16::new(0);
+static HANDLER_ACTIVE: atomic::AtomicBool = atomic::AtomicBool::new(false);
 
 const SLEEP_STEP: Duration = Duration::from_millis(50);
 const PRESS_DELAY: Duration = Duration::from_millis(10);
@@ -87,6 +88,10 @@ fn configure_env_logger(verbose: bool) {
 }
 
 fn spawn_handler() {
+    if HANDLER_ACTIVE.load(atomic::Ordering::Relaxed) {
+        return;
+    }
+    HANDLER_ACTIVE.store(true, atomic::Ordering::Relaxed);
     let mut state = STATE.lock();
     state.maybe_screen_press = Some(Instant::now());
     state.mouse_moved_delta = 0.0;
@@ -100,7 +105,7 @@ fn spawn_handler() {
                 if mouse.elapsed() < touch_wait {
                     state.maybe_screen_press = None;
                     state.mouse_moved_delta = 0.0;
-                    continue;
+                    break;
                 }
             }
             if maybe_screen.elapsed() < touch_wait {
@@ -111,6 +116,7 @@ fn spawn_handler() {
             state.need_simulate = true;
             break;
         }
+        HANDLER_ACTIVE.store(false, atomic::Ordering::Relaxed);
     });
 }
 
