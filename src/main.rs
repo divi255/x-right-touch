@@ -60,7 +60,10 @@ fn callback(event: Event) {
                 let mut state = STATE.lock();
                 state.maybe_screen_press = None;
                 if state.mouse_moved_delta > 40.0 {
-                    debug!("drag event ({})", state.mouse_moved_delta);
+                    debug!(
+                        "drag event ({}), right click not simulated",
+                        state.mouse_moved_delta
+                    );
                     false
                 } else {
                     mem::take(&mut state.need_simulate)
@@ -103,22 +106,25 @@ fn spawn_handler() {
         loop {
             thread::sleep(SLEEP_STEP);
             let mut state = STATE.lock();
-            if let Some(maybe_screen) = state.maybe_screen_press {
-                if let Some(mouse) = state.mouse_press {
-                    if mouse.elapsed() < touch_wait {
-                        state.maybe_screen_press = None;
-                        state.mouse_moved_delta = 0.0;
-                        break;
-                    }
-                }
-                if maybe_screen.elapsed() < touch_wait {
-                    continue;
-                }
-                state.maybe_screen_press = None;
-                state.mouse_press = None;
-                state.need_simulate = true;
+            let Some(maybe_screen) = state.maybe_screen_press else {
                 break;
+            };
+            if let Some(mouse) = state.mouse_press {
+                if mouse.elapsed() < touch_wait {
+                    state.maybe_screen_press = None;
+                    state.mouse_moved_delta = 0.0;
+                    debug!("mouse press detected, gesture aborted");
+                    break;
+                }
             }
+            if maybe_screen.elapsed() < touch_wait {
+                continue;
+            }
+            state.maybe_screen_press = None;
+            state.mouse_press = None;
+            debug!("scheduling right click simulation");
+            state.need_simulate = true;
+            break;
         }
         HANDLER_ACTIVE.store(false, atomic::Ordering::Relaxed);
         debug!("gesture handler exited");
