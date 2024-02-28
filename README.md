@@ -17,7 +17,7 @@ sudo apt-get -y install build-essential pkg-config \
     libudev-dev libx11-dev libxi-dev libxtst-dev libinput-dev
 ```
 
-Build and install
+Build and install:
 
 ```
 make all
