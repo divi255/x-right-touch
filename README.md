@@ -27,6 +27,6 @@ sudo make install
 ## Notes
 
 * Requires root permissions to work with *libinput*, so suid attribute is set
-  during installing.
+  when installing.
 
 * Has not been tested on Wayland.
