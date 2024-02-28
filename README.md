@@ -13,13 +13,15 @@ provide gestures on Linux out-of-the-box.
 Install required packages (for Debian/Ubuntu):
 
 ```
-apt -y install build-essential pkg-config libudev-dev libx11-dev libxi-dev libxtst-dev libinput-dev
+sudo apt-get -y install build-essential pkg-config \
+    libudev-dev libx11-dev libxi-dev libxtst-dev libinput-dev
 ```
 
 Build and install
 
 ```
-make all install
+make all
+sudo make install
 ```
 
 ## Notes
