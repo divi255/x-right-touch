@@ -89,6 +89,7 @@ fn configure_env_logger(verbose: bool) {
 
 fn spawn_handler() {
     if HANDLER_ACTIVE.load(atomic::Ordering::Relaxed) {
+        debug!("gesture handler already active, aborting");
         return;
     }
     HANDLER_ACTIVE.store(true, atomic::Ordering::Relaxed);
@@ -97,26 +98,30 @@ fn spawn_handler() {
     state.mouse_moved_delta = 0.0;
     state.mouse_coords = None;
     let touch_wait = Duration::from_millis(WAIT.load(atomic::Ordering::Relaxed).into());
-    thread::spawn(move || loop {
-        thread::sleep(SLEEP_STEP);
-        let mut state = STATE.lock();
-        if let Some(maybe_screen) = state.maybe_screen_press {
-            if let Some(mouse) = state.mouse_press {
-                if mouse.elapsed() < touch_wait {
-                    state.maybe_screen_press = None;
-                    state.mouse_moved_delta = 0.0;
-                    break;
+    thread::spawn(move || {
+        debug!("gesture handler started");
+        loop {
+            thread::sleep(SLEEP_STEP);
+            let mut state = STATE.lock();
+            if let Some(maybe_screen) = state.maybe_screen_press {
+                if let Some(mouse) = state.mouse_press {
+                    if mouse.elapsed() < touch_wait {
+                        state.maybe_screen_press = None;
+                        state.mouse_moved_delta = 0.0;
+                        break;
+                    }
                 }
+                if maybe_screen.elapsed() < touch_wait {
+                    continue;
+                }
+                state.maybe_screen_press = None;
+                state.mouse_press = None;
+                state.need_simulate = true;
+                break;
             }
-            if maybe_screen.elapsed() < touch_wait {
-                continue;
-            }
-            state.maybe_screen_press = None;
-            state.mouse_press = None;
-            state.need_simulate = true;
-            break;
         }
         HANDLER_ACTIVE.store(false, atomic::Ordering::Relaxed);
+        debug!("gesture handler exited");
     });
 }
 
